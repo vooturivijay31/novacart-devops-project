@@ -11,12 +11,7 @@ services:
   backend:
     image: novacart-backend:1.0
     environment:
-      APP_ENV: container
-      API_VERSION: v1
       DATABASE_URL: postgresql://novacart:novacart@postgres:5432/novacart
-      LOG_LEVEL: INFO
-    ports:
-      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
