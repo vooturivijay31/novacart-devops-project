@@ -1,0 +1,91 @@
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "novacart"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "dev"
+}
+
+variable "location" {
+  description = "Azure region"
+  type        = string
+  default     = "centralindia"
+}
+
+variable "acr_name" {
+  description = "Globally unique Azure Container Registry name"
+  type        = string
+
+  validation {
+    condition = (
+      length(var.acr_name) >= 5 &&
+      length(var.acr_name) <= 50 &&
+      can(regex("^[a-z0-9]+$", var.acr_name))
+    )
+    error_message = "ACR names must be 5-50 characters and contain only lowercase letters and numbers."
+  }
+}
+
+variable "postgres_server_name" {
+  description = "Globally unique PostgreSQL Flexible Server name"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.postgres_server_name))
+    error_message = "Use a 3-63 character PostgreSQL server name with lowercase letters, numbers, or internal hyphens."
+  }
+}
+
+variable "postgres_admin_username" {
+  description = "PostgreSQL administrator username"
+  type        = string
+  default     = "novacartadmin"
+}
+
+variable "postgres_admin_password" {
+  description = "PostgreSQL administrator password"
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_version" {
+  description = "PostgreSQL major version"
+  type        = string
+  default     = "16"
+}
+
+variable "postgres_sku_name" {
+  description = "Development PostgreSQL compute SKU"
+  type        = string
+  default     = "B_Standard_B1ms"
+}
+
+variable "postgres_storage_mb" {
+  description = "PostgreSQL storage size in MB"
+  type        = number
+  default     = 32768
+}
+
+variable "postgres_firewall_rules" {
+  description = "Explicit IP ranges allowed to connect to PostgreSQL"
+  type = map(object({
+    start_ip_address = string
+    end_ip_address   = string
+  }))
+  default = {}
+}
+
+variable "tags" {
+  description = "Additional Azure resource tags"
+  type        = map(string)
+  default     = {}
+}
