@@ -1,0 +1,22 @@
+subscription_id = "YOUR-AZURE-SUBSCRIPTION-ID"
+
+project_name = "novacart"
+environment  = "dev"
+location     = "centralindia"
+
+acr_name             = "novacartdevacr"
+postgres_server_name = "novacart-dev-psql"
+
+postgres_admin_username = "novacartadmin"
+
+postgres_version    = "16"
+postgres_sku_name   = "B_Standard_B1ms"
+postgres_storage_mb = 32768
+
+# Leave empty until you know which IP addresses need access.
+postgres_firewall_rules = {}
+
+tags = {
+  owner       = "devops"
+  cost_centre = "development"
+}
