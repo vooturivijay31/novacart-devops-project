@@ -91,11 +91,23 @@ variable "tags" {
 }
 
 variable "frontend_image_tag" {
-  description = "Frontend image tag in ACR"
+  description = "Existing frontend image tag in Azure Container Registry"
   type        = string
+  nullable    = false
+
+  validation {
+    condition     = length(trimspace(var.frontend_image_tag)) > 0
+    error_message = "frontend_image_tag must not be empty."
+  }
 }
 
 variable "backend_image_tag" {
-  description = "Backend image tag in ACR"
+  description = "Existing backend image tag in Azure Container Registry"
   type        = string
+  nullable    = false
+
+  validation {
+    condition     = length(trimspace(var.backend_image_tag)) > 0
+    error_message = "backend_image_tag must not be empty."
+  }
 }
