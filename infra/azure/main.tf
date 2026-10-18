@@ -39,6 +39,10 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
   tags = local.common_tags
+
+    lifecycle {
+    ignore_changes = [workload_profile]
+  }
 }
 
 # 4. Azure Container Registry
@@ -76,6 +80,7 @@ resource "azurerm_postgresql_flexible_server" "main" {
   name                = var.postgres_server_name
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
+  zone                = "3"
 
   version                = var.postgres_version
   administrator_login    = var.postgres_admin_username
@@ -115,35 +120,53 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "allowed" {
   end_ip_address   = each.value.end_ip_address
 }
 
-# 10. Discover supported PostgreSQL diagnostic categories
-data "azurerm_monitor_diagnostic_categories" "postgres" {
-  resource_id = azurerm_postgresql_flexible_server.main.id
-}
-
-# 11. Send PostgreSQL logs and metrics to Log Analytics
+#10. Send PostgreSQL logs and metrics to Log Analytics
 resource "azurerm_monitor_diagnostic_setting" "postgres" {
   name                       = "diag-${local.name_prefix}"
   target_resource_id         = azurerm_postgresql_flexible_server.main.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
-  dynamic "enabled_log" {
-    for_each = toset(
-      data.azurerm_monitor_diagnostic_categories.postgres.log_category_types
-    )
-
-    content {
-      category = enabled_log.value
-    }
+  enabled_log {
+    category = "PostgreSQLLogs"
   }
 
-  dynamic "metric" {
-    for_each = toset(
-      data.azurerm_monitor_diagnostic_categories.postgres.metrics
-    )
+  enabled_log {
+    category = "PostgreSQLFlexSessions"
+  }
 
-    content {
-      category = metric.value
-      enabled  = true
-    }
+  enabled_log {
+    category = "PostgreSQLFlexQueryStoreRuntime"
+  }
+
+  enabled_log {
+    category = "PostgreSQLFlexQueryStoreWaitStats"
+  }
+
+  enabled_log {
+    category = "PostgreSQLFlexTableStats"
+  }
+
+  enabled_log {
+    category = "PostgreSQLFlexDatabaseXacts"
+  }
+
+  enabled_log {
+    category = "PostgreSQLFlexPGBouncer"
+  }
+
+  enabled_log {
+    category = "PostgreSQLQueryStoreSqlText"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
   }
 }
+
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServicesTemp"
+  server_id        = azurerm_postgresql_flexible_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
