@@ -93,11 +93,9 @@ variable "tags" {
 variable "frontend_image_tag" {
   description = "Frontend image tag in ACR"
   type        = string
-  default     = "v1"
 }
 
 variable "backend_image_tag" {
   description = "Backend image tag in ACR"
   type        = string
-  default     = "v1"
 }

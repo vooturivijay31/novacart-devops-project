@@ -162,3 +162,11 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
     category = "AllMetrics"
   }
 }
+
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServicesTemp"
+  server_id        = azurerm_postgresql_flexible_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+

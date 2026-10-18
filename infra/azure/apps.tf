@@ -98,7 +98,7 @@ resource "azurerm_container_app" "frontend" {
 
       env {
         name  = "BACKEND_URL"
-        value = "https://${azurerm_container_app.backend.ingress[0].fqdn}"
+        value = "${azurerm_container_app.backend.ingress[0].fqdn}"
       }
 
       env {
