@@ -57,3 +57,8 @@ output "log_analytics_workspace_id" {
   description = "Log Analytics Workspace resource ID"
   value       = azurerm_log_analytics_workspace.main.id
 }
+
+output "frontend_url" {
+  description = "Public URL of the NovaCart frontend"
+  value       = "https://${azurerm_container_app.frontend.ingress[0].fqdn}"
+}
