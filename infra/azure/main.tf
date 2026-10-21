@@ -37,6 +37,7 @@ resource "azurerm_container_app_environment" "main" {
   location                   = azurerm_resource_group.main.location
   resource_group_name        = azurerm_resource_group.main.name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  infrastructure_subnet_id = azurerm_subnet.container_apps.id
 
   tags = local.common_tags
 
@@ -92,10 +93,14 @@ resource "azurerm_postgresql_flexible_server" "main" {
   backup_retention_days        = 7
   geo_redundant_backup_enabled = false
 
-  # Public development endpoint; firewall rules still restrict access.
-  public_network_access_enabled = true
+  delegated_subnet_id           = azurerm_subnet.postgres.id
+  private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
+  public_network_access_enabled = false
 
   tags = local.common_tags
+  depends_on = [
+  azurerm_private_dns_zone_virtual_network_link.postgres
+  ]
 }
 
 # 8. NovaCart application database
@@ -107,20 +112,7 @@ resource "azurerm_postgresql_flexible_server_database" "main" {
   collation = "en_US.utf8"
 }
 
-# 9. Explicit PostgreSQL firewall rules
-# No IP addresses are allowed by this configuration unless
-# they are supplied through postgres_firewall_rules.
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allowed" {
-  for_each = var.postgres_firewall_rules
-
-  name      = each.key
-  server_id = azurerm_postgresql_flexible_server.main.id
-
-  start_ip_address = each.value.start_ip_address
-  end_ip_address   = each.value.end_ip_address
-}
-
-#10. Send PostgreSQL logs and metrics to Log Analytics
+#9. Send PostgreSQL logs and metrics to Log Analytics
 resource "azurerm_monitor_diagnostic_setting" "postgres" {
   name                       = "diag-${local.name_prefix}"
   target_resource_id         = azurerm_postgresql_flexible_server.main.id
@@ -161,12 +153,5 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
   enabled_metric {
     category = "AllMetrics"
   }
-}
-
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
-  name             = "AllowAzureServicesTemp"
-  server_id        = azurerm_postgresql_flexible_server.main.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
 }
 

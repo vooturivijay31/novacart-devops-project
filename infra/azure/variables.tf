@@ -75,15 +75,6 @@ variable "postgres_storage_mb" {
   default     = 32768
 }
 
-variable "postgres_firewall_rules" {
-  description = "Explicit IP ranges allowed to connect to PostgreSQL"
-  type = map(object({
-    start_ip_address = string
-    end_ip_address   = string
-  }))
-  default = {}
-}
-
 variable "tags" {
   description = "Additional Azure resource tags"
   type        = map(string)

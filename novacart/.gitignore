@@ -8,3 +8,4 @@ infra/azure/.terraform/
 infra/azure/terraform.tfstate
 infra/azure/terraform.tfstate.*
 infra/azure/terraform.tfvars
+infra/azure/*.tfplan
