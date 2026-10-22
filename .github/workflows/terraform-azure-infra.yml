@@ -72,7 +72,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    environment: azure-development
+    environment: azure-deployment
 
     steps:
       - name: Checkout main
