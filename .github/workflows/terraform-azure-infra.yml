@@ -13,7 +13,7 @@ on:
       - main
     paths:
       - "infra/azure/**"
-      - ".github/workflows/terraform-azure-infrastructure.yml"
+      - ".github/workflows/terraform-azure-infra.yml"
 
 permissions:
   contents: read
