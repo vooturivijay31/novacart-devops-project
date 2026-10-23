@@ -1,0 +1,109 @@
+name: Azure Infrastructure
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infra/azure/**"
+      - ".github/workflows/terraform-azure-infrastructure.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/azure/**"
+      - ".github/workflows/terraform-azure-infra.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+defaults:
+  run:
+    working-directory: infra/azure
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_postgres_admin_username: ${{ vars.POSTGRES_ADMIN_USERNAME }}
+  TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+  TF_VAR_frontend_image_tag: ${{ vars.FRONTEND_IMAGE_TAG }}
+  TF_VAR_backend_image_tag: ${{ vars.BACKEND_IMAGE_TAG }}
+  TF_VAR_acr_name: ${{ vars.ACR_NAME }}
+  TF_VAR_postgres_server_name: ${{ vars.POSTGRES_SERVER_NAME }}
+
+jobs:
+  plan:
+    name: Terraform Plan
+    if: github.event_name == 'pull_request'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.8"
+
+      - name: Azure login using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID}}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan 
+
+  apply:
+    name: Terraform Apply
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    environment: azure-deployment
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.8"
+
+      - name: Azure login using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Verify Azure authentication
+        run: az account show
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Generate fresh Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Apply Terraform plan
+        run: terraform apply -auto-approve tfplan
+
